@@ -5,6 +5,7 @@ export interface RepoData {
   owner: string
   description: string
   stargazers_count: number
+  subscribers_count: number
   forks_count: number
   open_issues_count: number
   license?: {
@@ -12,6 +13,8 @@ export interface RepoData {
   }
   language: string
   updated_at: string
+  pushed_at: string
+  created_at: string
   contributors: Array<{
     avatar_url: string
     login: string

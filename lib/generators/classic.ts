@@ -3,10 +3,10 @@ import { themes } from "../themes"
 import { roundedRect } from "../utils"
 
 export const classicPreview = ({
-  repoData,
-  options,
-  canvas,
-}: PreviewGeneratorProps & { canvas: HTMLCanvasElement }): HTMLCanvasElement => {
+                                 repoData,
+                                 options,
+                                 canvas,
+                               }: PreviewGeneratorProps & { canvas: HTMLCanvasElement }): HTMLCanvasElement => {
   const ctx = canvas.getContext("2d")
   if (!ctx) return canvas
 
@@ -70,7 +70,7 @@ export const classicPreview = ({
   ctx.fillText(`${repoData.forks_count} forks`, 50, canvas.height - 50)
 
   // Load and draw contributor avatars
-  const avatarSize = 60
+  const avatarSize = 85
   const maxAvatars = 5
   repoData.contributors?.slice(0, maxAvatars).forEach((contributor, i) => {
     const img = new Image()
@@ -78,9 +78,21 @@ export const classicPreview = ({
     img.onload = () => {
       ctx.save()
       ctx.beginPath()
-      ctx.arc(canvas.width - 70 - i * (avatarSize + 10), canvas.height - 80, avatarSize / 2, 0, Math.PI * 2)
+      ctx.arc(
+          canvas.width - 70 - i * (avatarSize + 10),
+          canvas.height - avatarSize/2 - 40,
+          avatarSize / 2,
+          0,
+          Math.PI * 2
+      )
       ctx.clip()
-      ctx.drawImage(img, canvas.width - 100 - i * (avatarSize + 10), canvas.height - 110, avatarSize, avatarSize)
+      ctx.drawImage(
+          img,
+          canvas.width - 70 - i * (avatarSize + 10) - avatarSize/2,
+          canvas.height - avatarSize - 40,
+          avatarSize,
+          avatarSize
+      )
       ctx.restore()
     }
     img.src = contributor.avatar_url
@@ -88,4 +100,3 @@ export const classicPreview = ({
 
   return canvas
 }
-
