@@ -4,7 +4,7 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'GitSocial',
   description: 'A GitHub repository card generator with themes and styles',
-  authors: ['@JasonLovesDoggo'],
+  authors: {name: "Jason Cameron", url: "https://jasoncameron.dev"},
 }
 
 export default function RootLayout({
