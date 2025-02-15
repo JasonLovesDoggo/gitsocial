@@ -1,3 +1,7 @@
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+
 export const truncateText = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string => {
   if (ctx.measureText(text).width <= maxWidth) return text
 
@@ -33,3 +37,6 @@ export const roundedRect = (
   ctx.closePath()
 }
 
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
