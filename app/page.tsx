@@ -39,17 +39,23 @@ export default function Home() {
                 fetch(`https://api.github.com/repos/${owner}/${repo}/contributors?per_page=6`),
             ])
 
+
             if (!repoResponse.ok || !contributorsResponse.ok) {
                 throw new Error("Failed to fetch repository data")
             }
 
-            const repoData = await repoResponse.json()
+            const localrepoData = await repoResponse.json()
             const contributors = await contributorsResponse.json()
 
-            setRepoData({
-                ...repoData,
+            const repoData = { // setState only updates on the next render, so we can't use localrepoData directly
+                ...localrepoData,
                 contributors,
-            })
+            }
+            setRepoData(repoData)
+
+
+            generatePreviews(repoData) // Call generatePreviews here after setting repoData
+
         } catch (error) {
             console.error("Error fetching repo data:", error)
             setError(error instanceof Error ? error.message : "An unknown error occurred")
@@ -58,8 +64,10 @@ export default function Home() {
         }
     }
 
-    const generatePreviews = () => {
-        if (!repoData) return
+    const generatePreviews = (LiveRepoData: any) => {
+        console.log("Generating previews was called")
+        console.log("Repo data:", LiveRepoData)
+        if (!LiveRepoData) return
 
         console.log("Generating previews")
 
@@ -67,7 +75,7 @@ export default function Home() {
             const canvas = document.getElementById(`preview-canvas-${style.value}`) as HTMLCanvasElement
             if (canvas) {
                 generatePreview(canvas, {
-                    repoData,
+                    repoData: LiveRepoData,
                     options: {
                         theme,
                         style: style.value as any,
@@ -116,11 +124,7 @@ export default function Home() {
                         </div>
 
                         <Button
-                            onClick={() => {
-                                fetchRepoData().then(() => {
-                                    generatePreviews()
-                                })
-                            }}
+                            onClick={fetchRepoData}
                             disabled={loading}
                             className="bg-[#f5c2e7] text-[#1e1e2e] hover:bg-[#f5c2e7]/90"
                         >
