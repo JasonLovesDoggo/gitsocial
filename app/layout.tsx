@@ -2,9 +2,9 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
+  title: 'GitSocial',
+  description: 'A GitHub repository card generator with themes and styles',
+  authors: ['@JasonLovesDoggo'],
 }
 
 export default function RootLayout({
