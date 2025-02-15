@@ -1,20 +1,20 @@
 "use client"
 
-import {useState} from "react"
-import {Button} from "@/components/ui/button"
-import {Input} from "@/components/ui/input"
-import {Label} from "@/components/ui/label"
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select"
-import {ThemeName, themes} from "@/lib/themes"
-import type {RepoData} from "@/lib/types"
-import {generatePreview} from "@/lib/generators"
-import {Github, Download} from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ThemeName, themes } from "@/lib/themes"
+import type { RepoData } from "@/lib/types"
+import { generatePreview } from "@/lib/generators"
+import { Github, Download } from "lucide-react"
 
 const previewStyles = [
-    {value: "classic", label: "Classic"},
-    {value: "compact", label: "Compact"},
-    {value: "detailed", label: "Detailed"},
-    {value: "minimal", label: "Minimal"},
+    { value: "classic", label: "Classic" },
+    { value: "compact", label: "Compact" },
+    { value: "detailed", label: "Detailed" },
+    { value: "minimal", label: "Minimal" },
 ]
 
 export default function Home() {
@@ -23,6 +23,21 @@ export default function Home() {
     const [repoData, setRepoData] = useState<RepoData | null>(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const shouldGeneratePreviewsRef = useRef(false)
+
+    // Effect to handle the second click simulation
+    useEffect(() => {
+        if (shouldGeneratePreviewsRef.current && repoData) {
+            shouldGeneratePreviewsRef.current = false
+
+            // Add a small delay to ensure the DOM elements are ready
+            const timer = setTimeout(() => {
+                generatePreviews()
+            }, 100)
+
+            return () => clearTimeout(timer)
+        }
+    }, [repoData])
 
     const fetchRepoData = async () => {
         try {
@@ -39,22 +54,21 @@ export default function Home() {
                 fetch(`https://api.github.com/repos/${owner}/${repo}/contributors?per_page=6`),
             ])
 
-
             if (!repoResponse.ok || !contributorsResponse.ok) {
                 throw new Error("Failed to fetch repository data")
             }
 
-            const localrepoData = await repoResponse.json()
+            const repoInfo = await repoResponse.json()
             const contributors = await contributorsResponse.json()
 
-            const repoData = { // setState only updates on the next render, so we can't use localrepoData directly
-                ...localrepoData,
+            const newRepoData = {
+                ...repoInfo,
                 contributors,
             }
-            setRepoData(repoData)
 
-
-            generatePreviews(repoData) // Call generatePreviews here after setting repoData
+            // Set flag to trigger preview generation after state update
+            shouldGeneratePreviewsRef.current = true
+            setRepoData(newRepoData)
 
         } catch (error) {
             console.error("Error fetching repo data:", error)
@@ -64,18 +78,14 @@ export default function Home() {
         }
     }
 
-    const generatePreviews = (LiveRepoData: any) => {
-        console.log("Generating previews was called")
-        console.log("Repo data:", LiveRepoData)
-        if (!LiveRepoData) return
-
-        console.log("Generating previews")
+    const generatePreviews = () => {
+        if (!repoData) return
 
         previewStyles.forEach((style) => {
             const canvas = document.getElementById(`preview-canvas-${style.value}`) as HTMLCanvasElement
             if (canvas) {
                 generatePreview(canvas, {
-                    repoData: LiveRepoData,
+                    repoData: repoData,
                     options: {
                         theme,
                         style: style.value as any,
@@ -87,15 +97,15 @@ export default function Home() {
 
     return (
         <div className="min-h-screen flex flex-col bg-[#1e1e2e] text-[#cdd6f4]">
-            <main className="flex-grow p-8">
-                <div className="max-w-6xl mx-auto space-y-8">
-                    <div className="space-y-4">
+            <main className="flex-grow p-8 flex flex-col items-center">
+                <div className="max-w-6xl w-full space-y-8">
+                    <div className="space-y-4 text-center">
                         <h1 className="text-3xl font-bold">GitSocial - Github Social Preview Generator</h1>
                         <p className="text-[#bac2de]">Generate beautiful social preview images for your GitHub
                             repositories</p>
                     </div>
 
-                    <div className="grid gap-6 max-w-xl">
+                    <div className="grid gap-6 max-w-xl mx-auto w-full">
                         <div className="grid gap-2">
                             <Label htmlFor="repo-url">Repository URL</Label>
                             <Input
@@ -132,10 +142,10 @@ export default function Home() {
                         </Button>
                     </div>
 
-                    {error && <div className="bg-red-500 text-white p-4 rounded-md">{error}</div>}
+                    {error && <div className="bg-red-500 text-white p-4 rounded-md max-w-xl mx-auto w-full">{error}</div>}
 
                     {repoData && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
                             {previewStyles.map((style) => (
                                 <div key={style.value} className="space-y-4">
                                     <div className="relative group">
@@ -185,4 +195,3 @@ export default function Home() {
         </div>
     )
 }
-
