@@ -1,4 +1,4 @@
-export type ThemeName = "dark" | "light" | "system"
+import {ThemeName} from "@/lib/themes";
 
 export interface RepoData {
   name: string

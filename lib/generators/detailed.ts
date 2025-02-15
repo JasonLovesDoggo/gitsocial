@@ -23,6 +23,7 @@ export const detailedPreview = ({
   // Repository owner and name
   ctx.font = "bold 56px system-ui"
   ctx.fillStyle = colors.text
+  // @ts-ignore
   const repoText = `${repoData.owner?.login || "Unknown"}/${repoData.name || "Unknown"}`
   ctx.fillText(truncateText(ctx, repoText, canvas.width - 150), 75, 100)
 
