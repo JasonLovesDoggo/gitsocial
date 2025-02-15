@@ -64,10 +64,14 @@ export const classicPreview = ({
   const starText = `★ ${repoData.stargazers_count?.toLocaleString() || "0"}`
   ctx.fillText(starText, canvas.width - ctx.measureText(starText).width - 50, 110)
 
-  // Contributors
-  ctx.fillStyle = colors.overlay0
-  ctx.font = "24px system-ui"
-  ctx.fillText(`${repoData.forks_count} forks`, 50, canvas.height - 50)
+
+  // Language
+  if (repoData.language) {
+    ctx.font = "24px system-ui"
+    ctx.fillStyle = colors.blue
+    ctx.fillText(`⬤ ${repoData.language}`, 50, canvas.height - 40)
+  }
+
 
   // Load and draw contributor avatars
   const avatarSize = 85

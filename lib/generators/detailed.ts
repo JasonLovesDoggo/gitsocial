@@ -3,10 +3,10 @@ import { themes } from "../themes"
 import { truncateText, roundedRect } from "../utils"
 
 export const detailedPreview = ({
-  repoData,
-  options,
-  canvas,
-}: PreviewGeneratorProps & { canvas: HTMLCanvasElement }): HTMLCanvasElement => {
+                                  repoData,
+                                  options,
+                                  canvas,
+                                }: PreviewGeneratorProps & { canvas: HTMLCanvasElement }): HTMLCanvasElement => {
   const ctx = canvas.getContext("2d")
   if (!ctx) return canvas
 
@@ -33,62 +33,74 @@ export const detailedPreview = ({
   const description = truncateText(ctx, repoData.description || "No description available", canvas.width - 150)
   ctx.fillText(description, 75, 160)
 
-  // Stats
-  const stats = [
-    { label: "Stars", value: repoData.stargazers_count, color: colors.yellow, icon: "★" },
-    { label: "Forks", value: repoData.forks_count, color: colors.green, icon: "⑂" },
-    { label: "Issues", value: repoData.open_issues_count, color: colors.red, icon: "◉" },
-    { label: "Language", value: repoData.language, color: colors.blue, icon: "⬤" },
+  // Format dates
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Unknown'
+    const date = new Date(dateString)
+    return date.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  }
+
+  const last_pushed = formatDate(repoData.pushed_at)
+  const created_at = formatDate(repoData.created_at)
+
+  // Stats in two columns
+  const leftStats = [
+    { label: "Language", value: repoData.language || "N/A", icon: "🔠", color: colors.text },
+    { label: "Created", value: created_at, icon: "📅", color: colors.blue },
+    { label: "Last Push", value: last_pushed, icon: "🔄", color: colors.green },
   ]
 
-  stats.forEach((stat, i) => {
-    const x = 75 + (i * (canvas.width - 150)) / stats.length
-    const y = canvas.height - 180
+  const rightStats = [
+    { label: "Stars", value: repoData.stargazers_count?.toLocaleString() || "0", icon: "★", color: colors.yellow },
+    { label: "Forks", value: repoData.forks_count?.toLocaleString() || "0", icon: "⑂", color: colors.text },
+    { label: "Issues", value: repoData.open_issues_count?.toLocaleString() || "0", icon: "◉", color: colors.red },
+  ]
 
-    ctx.font = "bold 48px system-ui"
+  // Draw left column
+  const statsY = 220
+  const colWidth = (canvas.width - 150) / 2
+
+  leftStats.forEach((stat, i) => {
+    const y = statsY + i * 60
+
+    // Icon
+    ctx.font = "bold 32px system-ui"
     ctx.fillStyle = stat.color
-    ctx.fillText(stat.icon, x, y)
+    ctx.fillText(stat.icon, 75, y)
 
-    ctx.font = "bold 36px system-ui"
-    ctx.fillStyle = colors.text
-    ctx.fillText(stat.value?.toLocaleString() || "N/A", x + 50, y)
-
-    ctx.font = "24px system-ui"
+    // Label
+    ctx.font = "bold 26px system-ui"
     ctx.fillStyle = colors.subtext1
-    ctx.fillText(stat.label, x + 50, y + 40)
+    ctx.fillText(stat.label + ":", 115, y)
+
+    // Value
+    ctx.font = "26px system-ui"
+    ctx.fillStyle = colors.text
+    ctx.fillText(stat.value, 115 + ctx.measureText(stat.label + ":").width + 10, y)
   })
 
-  // Graph
-  const graphWidth = canvas.width - 150
-  const graphHeight = 150
-  const graphX = 75
-  const graphY = 220
+  // Draw right column
+  rightStats.forEach((stat, i) => {
+    const y = statsY + i * 60
 
-  // Draw graph background
-  ctx.fillStyle = colors.surface0
-  roundedRect(ctx, graphX, graphY, graphWidth, graphHeight, 12)
-  ctx.fill()
+    // Icon
+    ctx.font = "bold 32px system-ui"
+    ctx.fillStyle = stat.color
+    ctx.fillText(stat.icon, 75 + colWidth, y)
 
-  // Draw graph lines
-  ctx.strokeStyle = colors.overlay0
-  ctx.lineWidth = 2
-  const points = [0, 30, 10, 50, 80, 40, 60, 90, 100]
-  const stepX = graphWidth / (points.length - 1)
-  const stepY = graphHeight / 100
+    // Label
+    ctx.font = "bold 26px system-ui"
+    ctx.fillStyle = colors.subtext1
+    ctx.fillText(stat.label + ":", 115 + colWidth, y)
 
-  ctx.beginPath()
-  ctx.moveTo(graphX, graphY + graphHeight - points[0] * stepY)
-  for (let i = 1; i < points.length; i++) {
-    ctx.lineTo(graphX + i * stepX, graphY + graphHeight - points[i] * stepY)
-  }
-  ctx.stroke()
-
-  // Draw graph points
-  ctx.fillStyle = colors.blue
-  points.forEach((point, i) => {
-    ctx.beginPath()
-    ctx.arc(graphX + i * stepX, graphY + graphHeight - point * stepY, 4, 0, Math.PI * 2)
-    ctx.fill()
+    // Value
+    ctx.font = "26px system-ui"
+    ctx.fillStyle = colors.text
+    ctx.fillText(stat.value, 115 + colWidth + ctx.measureText(stat.label + ":").width + 10, y)
   })
 
   // Topics
@@ -112,6 +124,34 @@ export const detailedPreview = ({
     })
   }
 
+  // Load and draw contributor avatars
+  const avatarSize = 85
+  const maxAvatars = 5
+  repoData.contributors?.slice(0, maxAvatars).forEach((contributor, i) => {
+    const img = new Image()
+    img.crossOrigin = "anonymous"
+    img.onload = () => {
+      ctx.save()
+      ctx.beginPath()
+      ctx.arc(
+          canvas.width - 70 - i * (avatarSize + 10),
+          canvas.height - avatarSize/2 - 40,
+          avatarSize / 2,
+          0,
+          Math.PI * 2
+      )
+      ctx.clip()
+      ctx.drawImage(
+          img,
+          canvas.width - 70 - i * (avatarSize + 10) - avatarSize/2,
+          canvas.height - avatarSize - 40,
+          avatarSize,
+          avatarSize
+      )
+      ctx.restore()
+    }
+    img.src = contributor.avatar_url
+  })
+
   return canvas
 }
-
