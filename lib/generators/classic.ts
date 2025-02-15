@@ -10,7 +10,7 @@ export const classicPreview = ({
   const ctx = canvas.getContext("2d")
   if (!ctx) return canvas
 
-  const colors = themes[options.theme]
+  const colors = themes[options.theme as keyof typeof themes]
 
   // Background
   ctx.fillStyle = colors.base
@@ -28,6 +28,7 @@ export const classicPreview = ({
   // Repository name and owner
   ctx.font = "bold 48px system-ui"
   ctx.fillStyle = colors.pink
+  // @ts-ignore
   const ownerText = repoData.owner?.login || "Unknown"
   ctx.fillText(ownerText, 50, 120)
 
@@ -61,13 +62,12 @@ export const classicPreview = ({
   ctx.font = "bold 36px system-ui"
   ctx.fillStyle = colors.yellow
   const starText = `★ ${repoData.stargazers_count?.toLocaleString() || "0"}`
-  ctx.fillText(starText, canvas.width - ctx.measureText(starText).width - 50, 60)
+  ctx.fillText(starText, canvas.width - ctx.measureText(starText).width - 50, 110)
 
   // Contributors
-  const contributorCount = repoData.contributors?.length || 0
   ctx.fillStyle = colors.overlay0
   ctx.font = "24px system-ui"
-  ctx.fillText(`${contributorCount} Contributors`, canvas.width - 250, canvas.height - 50)
+  ctx.fillText(`${repoData.forks_count} forks`, 50, canvas.height - 50)
 
   // Load and draw contributor avatars
   const avatarSize = 60
